@@ -6,16 +6,19 @@ class LaptopsSpider(scrapy.Spider):
     start_urls = ['https://ek.ua/ua/list/298/']
 
     def parse(self, response):
-        laptops = response.css('.model-short-block')
-        for laptop in laptops:
-            model = laptop.css('.model-conf-title::text').get()
-            image_url = laptop.css('.model-short-photo img::attr(src)').get()
-            shop = laptop.css('.model-shop-title::text').get()
-            price = laptop.css('. model-price-range::text').get()
-
+        products = response.css('.list_form1')
+        for product in products:
+            model = product.css('.model-short-title a::title').get()
+            image_url = product.css('.model-short-img img::attr(src)').get()
+            shop = product.css('.model-short-shop span::text').get()
+            price = product.css('.model-short-price::text').get()
             yield {
-                'Модель': model,
-                'URL зображення': image_url,
-                'Магазин': shop,
-                'Ціна': price
+                'model': model,
+                'image_url': image_url,
+                'shop': shop,
+                'price': price,
             }
+
+        next_page = response.css('.paginator .active + a::attr(href)').get()
+        if next_page:
+            yield response.follow(next_page, self.parse)
